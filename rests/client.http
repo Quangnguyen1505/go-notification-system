@@ -1,0 +1,5 @@
+@host = http://localhost:5000
+@notification_id = 00000000-0000-0000-0000-000000000001
+
+###
+GET {{host}}/v1/api/notification/{{notification_id}}
