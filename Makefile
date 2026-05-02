@@ -25,4 +25,7 @@ run-proxy: deps
 run-notification: deps
 	$(GO) run ./cmd/notification
 
+sqlgen:
+	sqlc generate
+
 .PHONY: all deps build test run run-proxy run-notification

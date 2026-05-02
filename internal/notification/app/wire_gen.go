@@ -23,7 +23,7 @@ func InitApp(cfg *config.Config, logger2 *logger.LoggerZap, grpcServer *grpc.Ser
 	if err != nil {
 		return nil, nil, err
 	}
-	notificationRepo := repo.NewnotificationRepo(dbEngine, logger2)
+	notificationRepo := repo.NewNotificationRepo(dbEngine, logger2)
 	service := notification.NewService(notificationRepo, logger2)
 	notificationServiceServer := router.NewNotificationGRPCServer(grpcServer, service)
 	app := New(cfg, logger2, dbEngine, notificationServiceServer)

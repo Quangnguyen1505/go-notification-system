@@ -1,5 +1,16 @@
 @host = http://localhost:5000
-@notification_id = 00000000-0000-0000-0000-000000000001
+@notification_id = 9f7c6cb6-8a4f-4e29-97f7-9566b4151552
 
 ###
 GET {{host}}/v1/api/notification/{{notification_id}}
+
+
+###
+POST {{host}}/v1/api/notification
+Content-Type: application/json
+
+{
+    "user_id": "00000000-0000-0000-0000-000000000001",
+    "message": "This is a test notification",
+    "notification_type": 1
+}
