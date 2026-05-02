@@ -80,6 +80,10 @@ The codebase separates **entrypoints** (`cmd/`), **core domain** (`internal/`), 
 │       ├── domain/            # Entities/VOs/domain services
 │       ├── usecases/          # Application use-cases
 │       └── infras/            # DB/queue/provider integrations
+│           ├── postgresql/     # PostgreSQL + sqlc generated queries
+│           │   ├── query/      # sqlc input queries (*.sql)
+│           │   └── gen/        # sqlc generated Go code
+│           └── repo/           # Repository implementations (inmem/postgres, ...)
 │
 ├── pkg/
 │   ├── config/                # Shared config structs
@@ -91,7 +95,8 @@ The codebase separates **entrypoints** (`cmd/`), **core domain** (`internal/`), 
 ├── proto/
 │   └── gen/                   # Proto and/or generated code location (placeholder)
 │
-├── db/                        # SQL/schema/migrations (direction)
+├── db/
+│   └── migrations/            # Goose migrations (PostgreSQL)
 ├── docker/                    # Dockerfiles
 ├── docs/                      # Documents & diagrams
 ├── rests/                     # HTTP client files for dev
@@ -101,14 +106,47 @@ The codebase separates **entrypoints** (`cmd/`), **core domain** (`internal/`), 
 └── go.sum
 ```
 
-## Local run (scaffolding phase)
+## DDD / bounded-context layout
 
-This repository focuses on the architecture scaffolding. Some services/IDLs are not fully implemented yet, so end-to-end flow may not run out of the box.
+This repo follows a pragmatic DDD-style layout per bounded context (currently: **notification**).
 
-- Reverse proxy entrypoint: `cmd/proxy/`
-- Docker build for proxy: `docker/Dockerfile-proxy`
+- **`internal/<context>/domain`**: entities/value objects and *ports* (interfaces) that the domain/use-cases depend on.
+- **`internal/<context>/usecases`**: application services (orchestrate domain + ports).
+- **`internal/<context>/infras`**: adapters (Postgres/sqlc, queues, external providers).
+- **`internal/<context>/app`**: composition root (Wire injector, router/server bootstrap).
+
+The key idea is: domain/usecases do **not** import infrastructure packages; only infrastructure implements domain ports.
+
+## Local run (implemented parts)
+
+Some services are still in-progress, but the **notification** context already has working building blocks:
+
+- PostgreSQL connection via `pkg/postgres`
+- Goose migrations under `db/migrations`
+- `sqlc` codegen under `internal/notification/infras/postgresql/gen`
+- Postgres-backed repository implementation under `internal/notification/infras/repo`
+
+### Start dependencies
+
+- Start PostgreSQL: `docker compose -f docker-compose-core.yml up -d postgres`
+
+### Run migrations (notification DB)
+
+This repo provides a per-context Makefile that can derive `GOOSE_DBSTRING` from `cmd/notification/config.yml` (without requiring `yq`).
+
+- Apply migrations: `make -f cmd/cli/makefile/notification/main.mk upGoose`
+- Reset DB (dev only): `make -f cmd/cli/makefile/notification/main.mk resetGoose`
+
+### Generate sqlc code
+
+- `sqlc generate`
+
+### Run services
+
+- Notification service: `go run ./cmd/notification`
+- Proxy (grpc-gateway): `go run ./cmd/proxy`
 
 ## Notes
 
 - Architecture diagram: `docs/Architechture-design.png`.
-- `cmd/notification`, `cmd/user`, and `internal/notification/*` are currently skeletons to be implemented following the design.
+- `cmd/notification` and `internal/notification/*` are under active development; expect API/contracts to change.

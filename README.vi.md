@@ -80,6 +80,10 @@ Repo được tổ chức theo hướng tách **entrypoints** (`cmd/`), **core d
 │       ├── domain/            # Entities/VOs/Domain services
 │       ├── usecases/          # Application use-cases
 │       └── infras/            # DB/queue/provider integrations
+│           ├── postgresql/     # PostgreSQL + sqlc generated queries
+│           │   ├── query/      # file SQL đầu vào cho sqlc
+│           │   └── gen/        # code Go sinh ra bởi sqlc
+│           └── repo/           # Repository implementations (inmem/postgres, ...)
 │
 ├── pkg/
 │   ├── config/                # Struct config dùng chung
@@ -91,7 +95,8 @@ Repo được tổ chức theo hướng tách **entrypoints** (`cmd/`), **core d
 ├── proto/
 │   └── gen/                   # Nơi đặt proto / (và/hoặc) code sinh ra (đang là placeholder)
 │
-├── db/                        # SQL/schema/migrations (định hướng)
+├── db/
+│   └── migrations/            # Goose migrations (PostgreSQL)
 ├── docker/                    # Dockerfiles
 ├── docs/                      # Tài liệu & sơ đồ (architecture diagram)
 ├── rests/                     # HTTP client files (Postman-like) cho dev
@@ -101,14 +106,47 @@ Repo được tổ chức theo hướng tách **entrypoints** (`cmd/`), **core d
 └── go.sum
 ```
 
-## Chạy local (giai đoạn scaffolding)
+## Tổ chức theo DDD / bounded-context
 
-Hiện repo tập trung vào khung kiến trúc. Một số service/IDL chưa hoàn thiện nên luồng end-to-end có thể chưa chạy được ngay.
+Repo theo hướng DDD “thực dụng” theo từng bounded context (hiện có **notification**):
 
-- Reverse proxy (entrypoint hiện có): `cmd/proxy/`
-- Docker build proxy: dùng `docker/Dockerfile-proxy`
+- **`internal/<context>/domain`**: entity/value object và các *port* (interface) mà use-case phụ thuộc.
+- **`internal/<context>/usecases`**: application service (điều phối domain + port).
+- **`internal/<context>/infras`**: adapter/integration (Postgres/sqlc, queue, provider...).
+- **`internal/<context>/app`**: composition root (Wire injector, router/server bootstrap).
+
+Nguyên tắc: domain/usecase **không import** infrastructure; infrastructure mới implement interface trong domain.
+
+## Chạy local (phần đã làm được)
+
+Một số service còn đang làm, nhưng bounded context **notification** đã có các phần chạy được:
+
+- Kết nối PostgreSQL qua `pkg/postgres`
+- Migration bằng Goose trong `db/migrations`
+- Sinh code `sqlc` trong `internal/notification/infras/postgresql/gen`
+- Repo Postgres trong `internal/notification/infras/repo`
+
+### Chạy dependency
+
+- Chạy PostgreSQL: `docker compose -f docker-compose-core.yml up -d postgres`
+
+### Chạy migration (notification DB)
+
+Repo có Makefile theo bounded-context, tự đọc `cmd/notification/config.yml` để tạo `GOOSE_DBSTRING` (không bắt buộc cài `yq`).
+
+- Up migrations: `make -f cmd/cli/makefile/notification/main.mk upGoose`
+- Reset DB (chỉ dev): `make -f cmd/cli/makefile/notification/main.mk resetGoose`
+
+### Sinh code sqlc
+
+- `sqlc generate`
+
+### Chạy service
+
+- Notification service: `go run ./cmd/notification`
+- Proxy (grpc-gateway): `go run ./cmd/proxy`
 
 ## Ghi chú
 
 - Hình kiến trúc nằm ở `docs/Architechture-design.png`.
-- Thư mục `cmd/notification`, `cmd/user`, và `internal/notification/*` hiện là skeleton để phát triển dần theo kiến trúc.
+- `cmd/notification` và `internal/notification/*` đang phát triển; API/contracts có thể thay đổi.
