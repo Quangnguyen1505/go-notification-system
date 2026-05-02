@@ -12,15 +12,32 @@ import (
 	"github.com/quangnguyen1505/go-notification-system/internal/notification/infras/repo"
 	"github.com/quangnguyen1505/go-notification-system/internal/notification/usecases/notification"
 	"github.com/quangnguyen1505/go-notification-system/pkg/logger"
+	"github.com/quangnguyen1505/go-notification-system/pkg/postgres"
 	"google.golang.org/grpc"
 )
 
 // Injectors from wire.go:
 
-func InitApp(cfg *config.Config, logger2 *logger.LoggerZap, grpcServer *grpc.Server) (*App, error) {
-	notificationInMemRepo := repo.NewNotificationInMemRepo(logger2)
-	service := notification.NewService(notificationInMemRepo, logger2)
+func InitApp(cfg *config.Config, logger2 *logger.LoggerZap, grpcServer *grpc.Server) (*App, func(), error) {
+	dbEngine, cleanup, err := dbEngineFunc(cfg, logger2)
+	if err != nil {
+		return nil, nil, err
+	}
+	notificationRepo := repo.NewnotificationRepo(dbEngine, logger2)
+	service := notification.NewService(notificationRepo, logger2)
 	notificationServiceServer := router.NewNotificationGRPCServer(grpcServer, service)
-	app := New(cfg, logger2, notificationServiceServer)
-	return app, nil
+	app := New(cfg, logger2, dbEngine, notificationServiceServer)
+	return app, func() {
+		cleanup()
+	}, nil
+}
+
+// wire.go:
+
+func dbEngineFunc(config2 *config.Config, logger2 *logger.LoggerZap) (postgres.DBEngine, func(), error) {
+	db, err := postgres.NewPostgresDB(&config2.Postgres, logger2)
+	if err != nil {
+		return nil, nil, err
+	}
+	return db, func() { db.Close() }, nil
 }

@@ -46,9 +46,11 @@ func main() {
 
 	server := grpc.NewServer()
 
-	if _, err := notificationapp.InitApp(cfg, Logger, server); err != nil {
+	if _, cleanup, err := notificationapp.InitApp(cfg, Logger, server); err != nil {
 		Logger.Error("failed init app", zap.Error(err))
 		return
+	} else if cleanup != nil {
+		defer cleanup()
 	}
 
 	// GRPC server

@@ -12,9 +12,10 @@ import (
 
 type (
 	Config struct {
-		configs.App  `yaml:"app"`
-		configs.HTTP `yaml:"http"`
-		configs.Log  `yaml:"logger"`
+		configs.App      `yaml:"app"`
+		configs.HTTP     `yaml:"http"`
+		configs.Log      `yaml:"logger"`
+		configs.Postgres `yaml:"postgresql"`
 	}
 )
 

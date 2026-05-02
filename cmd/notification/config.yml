@@ -10,6 +10,16 @@ http:
 #   log_level: 'debug'
 #   rollbar_env: 'notification-service'
 
+postgresql:
+  username: postgres
+  password: "1234567890"
+  host: localhost
+  port: 5432
+  dbname : notification_db
+  maxOpenConns: 100
+  minConns: 10
+  connMaxLifeTime: 3600
+
 logger:
   file_name: "./storages/logger/notification/logv1.001.log"
   max_size:    500

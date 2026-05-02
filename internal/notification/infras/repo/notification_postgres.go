@@ -6,38 +6,41 @@ import (
 	"github.com/google/wire"
 	"github.com/quangnguyen1505/go-notification-system/internal/notification/domain"
 	"github.com/quangnguyen1505/go-notification-system/pkg/logger"
+	"github.com/quangnguyen1505/go-notification-system/pkg/postgres"
 )
 
-var _ domain.NotificationRepo = (*notificationInMemRepo)(nil)
+var _ domain.NotificationRepo = (*notificationRepo)(nil)
 
 var RepositorySet = wire.NewSet(
-	NewNotificationInMemRepo,
-	wire.Bind(new(domain.NotificationRepo), new(*notificationInMemRepo)),
+	NewnotificationRepo,
+	wire.Bind(new(domain.NotificationRepo), new(*notificationRepo)),
 )
 
-type notificationInMemRepo struct {
+type notificationRepo struct {
+	pg     postgres.DBEngine
 	logger *logger.LoggerZap
 }
 
-func NewNotificationInMemRepo(logger *logger.LoggerZap) *notificationInMemRepo {
-	return &notificationInMemRepo{
+func NewnotificationRepo(pg postgres.DBEngine, logger *logger.LoggerZap) *notificationRepo {
+	return &notificationRepo{
+		pg:     pg,
 		logger: logger,
 	}
 }
 
-func (r *notificationInMemRepo) Create(ctx context.Context, _ *domain.NotificationModel) error {
+func (r *notificationRepo) Create(ctx context.Context, _ *domain.NotificationModel) error {
 	r.logger.Info("Creating notification in memory")
 	// Implementation for creating a notification in memory
 	return nil
 }
 
-func (r *notificationInMemRepo) GetByID(ctx context.Context, _ *domain.NotificationModel) (string, error) {
+func (r *notificationRepo) GetByID(ctx context.Context, _ *domain.NotificationModel) (string, error) {
 	r.logger.Info("Getting notification by ID in memory")
 	// Implementation for getting a notification by ID in memory
 	return "hehe", nil
 }
 
-func (r *notificationInMemRepo) GetAllByUserID(ctx context.Context, _ *domain.NotificationModel) error {
+func (r *notificationRepo) GetAllByUserID(ctx context.Context, _ *domain.NotificationModel) error {
 	r.logger.Info("Getting all notifications by user ID in memory")
 	// Implementation for getting all notifications by user ID in memory
 	return nil
