@@ -76,12 +76,13 @@ func (s *notificationGRPCServer) GetNotification(
 	}
 
 	model := &domain.NotificationModel{ID: notificationID}
-	if err := s.uc.GetByID(ctx, model); err != nil {
+	noti_id, err := s.uc.GetByID(ctx, model)
+	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	return &gen.GetNotificationResponse{
-		NotificationId: model.ID.String(),
+		NotificationId: noti_id,
 		Status:         "ok",
 	}, nil
 }

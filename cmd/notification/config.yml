@@ -6,6 +6,14 @@ http:
   host: '0.0.0.0'
   port: 5001
 
+# logger:
+#   log_level: 'debug'
+#   rollbar_env: 'notification-service'
+
 logger:
-  log_level: 'debug'
-  rollbar_env: 'notification-service'
+  file_name: "./storages/logger/notification/logv1.001.log"
+  max_size:    500
+  max_backups: 3
+  max_age:     28
+  compress:   true
+  loglevel:  debug

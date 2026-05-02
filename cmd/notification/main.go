@@ -2,8 +2,9 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"log/slog"
+	"log"
 	"net"
 	"os"
 	"os/signal"
@@ -12,40 +13,41 @@ import (
 	"github.com/quangnguyen1505/go-notification-system/cmd/notification/config"
 	notificationapp "github.com/quangnguyen1505/go-notification-system/internal/notification/app"
 	"github.com/quangnguyen1505/go-notification-system/pkg/logger"
-	"github.com/sirupsen/logrus"
 	"go.uber.org/automaxprocs/maxprocs"
+	"go.uber.org/zap"
 	"google.golang.org/grpc"
 )
 
+var Logger *logger.LoggerZap
+
 func main() {
-	// set GOMAXPROCS
+	// set GOMAXPROCS -> get default from cpu core -> ex: 4 cores -> GOMAXPROCS=8
 	_, err := maxprocs.Set()
 	if err != nil {
-		slog.Error("failed set max procs", "err", err)
+		log.Printf("failed set max procs: %v", err)
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	cfg, err := config.NewConfig()
 	if err != nil {
-		slog.Error("failed get config", "err", err)
+		log.Printf("failed get config: %v", err)
 		return
 	}
 
-	slog.Info("⚡ init app", "name", cfg.Name, "version", cfg.Version)
+	Logger = logger.NewLogger(cfg.Log)
+	Logger.Info("⚡ init app", zap.String("name", cfg.Name), zap.String("version", cfg.Version))
 
 	// set up logrus
-	logrus.SetFormatter(&logrus.JSONFormatter{})
-	logrus.SetOutput(os.Stdout)
-	logrus.SetLevel(logger.ConvertLogLevel(cfg.Log.Level))
-
-	// integrate Logrus with the slog logger
-	slog.New(logger.NewLogrusHandler(logrus.StandardLogger()))
+	// logrus.SetFormatter(&logrus.JSONFormatter{})
+	// logrus.SetOutput(os.Stdout)
+	// logrus.SetLevel(logger.ConvertLogLevel(cfg.Log.Level))
 
 	server := grpc.NewServer()
 
-	if _, err := notificationapp.InitApp(cfg, server); err != nil {
-		slog.Error("failed init app", "err", err)
+	if _, err := notificationapp.InitApp(cfg, Logger, server); err != nil {
+		Logger.Error("failed init app", zap.Error(err))
 		return
 	}
 
@@ -55,17 +57,25 @@ func main() {
 
 	l, err := net.Listen(network, address)
 	if err != nil {
-		slog.Error("failed to listen to address", "err", err, "network", network, "address", address)
-		cancel()
+		Logger.Error(
+			"failed to listen to address",
+			zap.Error(err),
+			zap.String("network", network),
+			zap.String("address", address),
+		)
 		return
 	}
 
-	slog.Info("🌏 start server...", "address", address)
+	Logger.Info("🌏 start server...", zap.String("address", address))
 
 	defer func() {
-		if err1 := l.Close(); err != nil {
-			slog.Error("failed to close", "err", err1, "network", network, "address", address)
-			<-ctx.Done()
+		if err1 := l.Close(); err1 != nil {
+			Logger.Error(
+				"failed to close listener",
+				zap.Error(err1),
+				zap.String("network", network),
+				zap.String("address", address),
+			)
 		}
 	}()
 
@@ -74,20 +84,20 @@ func main() {
 
 	serveErr := make(chan error, 1)
 	go func() {
-		serveErr <- server.Serve(l)
+		serveErr <- server.Serve(l) // init gRPC server && block until the server is stopped
 	}()
 
 	select {
 	case v := <-quit:
-		slog.Info("signal.Notify", "signal", v)
+		Logger.Info("signal.Notify", zap.String("signal", v.String()))
 		cancel()
 	case err := <-serveErr:
-		if err != nil {
-			slog.Error("gRPC server exited", "err", err)
+		if err != nil && !errors.Is(err, grpc.ErrServerStopped) {
+			Logger.Error("gRPC server exited", zap.Error(err))
 		}
 		cancel()
-	case done := <-ctx.Done():
-		slog.Info("ctx.Done", "app done", done)
+	case <-ctx.Done():
+		Logger.Info("ctx.Done", zap.Error(ctx.Err()))
 	}
 
 	server.GracefulStop()

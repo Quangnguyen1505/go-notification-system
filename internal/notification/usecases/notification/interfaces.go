@@ -9,7 +9,7 @@ import (
 type (
 	UseCase interface {
 		Create(context.Context, *domain.NotificationModel) error
-		GetByID(context.Context, *domain.NotificationModel) error
+		GetByID(context.Context, *domain.NotificationModel) (string, error)
 		GetAllByUserID(context.Context, *domain.NotificationModel) error
 	}
 )

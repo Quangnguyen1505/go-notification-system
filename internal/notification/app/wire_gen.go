@@ -11,15 +11,16 @@ import (
 	"github.com/quangnguyen1505/go-notification-system/internal/notification/app/router"
 	"github.com/quangnguyen1505/go-notification-system/internal/notification/infras/repo"
 	"github.com/quangnguyen1505/go-notification-system/internal/notification/usecases/notification"
+	"github.com/quangnguyen1505/go-notification-system/pkg/logger"
 	"google.golang.org/grpc"
 )
 
 // Injectors from wire.go:
 
-func InitApp(cfg *config.Config, grpcServer *grpc.Server) (*App, error) {
-	notificationInMemRepo := repo.NewNotificationInMemRepo()
-	service := notification.NewService(notificationInMemRepo)
+func InitApp(cfg *config.Config, logger2 *logger.LoggerZap, grpcServer *grpc.Server) (*App, error) {
+	notificationInMemRepo := repo.NewNotificationInMemRepo(logger2)
+	service := notification.NewService(notificationInMemRepo, logger2)
 	notificationServiceServer := router.NewNotificationGRPCServer(grpcServer, service)
-	app := New(cfg, notificationServiceServer)
+	app := New(cfg, logger2, notificationServiceServer)
 	return app, nil
 }

@@ -12,6 +12,14 @@ grpc:
   user_host: "0.0.0.0"
   user_port: 5002
 
+# logger:
+#   log_level: "debug"
+#   rollbar_env: "reverse-proxy"
+
 logger:
-  log_level: "debug"
-  rollbar_env: "reverse-proxy"
+  file_name: "./storages/logger/proxy/logv1.001.log"
+  max_size:    500
+  max_backups: 3
+  max_age:     28
+  compress:   true
+  loglevel:  debug

@@ -12,6 +12,11 @@ type (
 	}
 
 	Log struct {
-		Level string `yaml:"log_level" env:"LOG_LEVEL"`
+		File_name   string `mapstructure:"file_name"`
+		Max_size    int    `mapstructure:"max_size"`
+		Max_backups int    `mapstructure:"max_backups"`
+		Max_age     int    `mapstructure:"max_age"`
+		Compress    bool   `mapstructure:"compress"`
+		Loglevel    string `mapstructure:"loglevel"`
 	}
 )
