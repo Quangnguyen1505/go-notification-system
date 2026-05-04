@@ -146,6 +146,14 @@ This repo provides a per-context Makefile that can derive `GOOSE_DBSTRING` from 
 - Notification service: `go run ./cmd/notification`
 - Proxy (grpc-gateway): `go run ./cmd/proxy`
 
+## OpenAPI / Swagger
+
+This repo generates OpenAPI v2 (Swagger) from protobuf annotations using `buf`, matching the approach in `Golang-microservice-coffee-shop-none/`.
+
+- Generate gRPC + grpc-gateway + OpenAPI artifacts: `make protogen`
+- Open Swagger UI (when proxy is running): `http://<proxy_host>:<proxy_port>/swagger/`
+	- The proxy serves the OpenAPI JSON at `/swagger/doc.json` (from `third_party/OpenAPI/notification.swagger.json`).
+
 ## Notes
 
 - Architecture diagram: `docs/Architechture-design.png`.

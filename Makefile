@@ -28,4 +28,7 @@ run-notification: deps
 sqlgen:
 	sqlc generate
 
-.PHONY: all deps build test run run-proxy run-notification
+protogen:
+	$(GO) run github.com/bufbuild/buf/cmd/buf@latest generate
+
+.PHONY: all deps build test run run-proxy run-notification sqlgen protogen
