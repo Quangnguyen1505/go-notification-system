@@ -5,18 +5,15 @@ package app
 
 import (
 	"github.com/google/wire"
-	"github.com/quangnguyen1505/go-notification-system/cmd/notification/config"
+	"github.com/quangnguyen1505/go-notification-system/global/noti"
 	"github.com/quangnguyen1505/go-notification-system/internal/notification/app/router"
 	"github.com/quangnguyen1505/go-notification-system/internal/notification/infras/repo"
 	NotificationUC "github.com/quangnguyen1505/go-notification-system/internal/notification/usecases/notification"
-	"github.com/quangnguyen1505/go-notification-system/pkg/logger"
 	"github.com/quangnguyen1505/go-notification-system/pkg/postgres"
 	"google.golang.org/grpc"
 )
 
 func InitApp(
-	cfg *config.Config,
-	logger *logger.LoggerZap,
 	grpcServer *grpc.Server,
 ) (*App, func(), error) {
 	panic(wire.Build(
@@ -28,8 +25,8 @@ func InitApp(
 	))
 }
 
-func dbEngineFunc(config *config.Config, logger *logger.LoggerZap) (postgres.DBEngine, func(), error) {
-	db, err := postgres.NewPostgresDB(&config.Postgres, logger)
+func dbEngineFunc() (postgres.DBEngine, func(), error) {
+	db, err := postgres.NewPostgresDB(&noti.Config.Postgres, noti.Logger)
 	if err != nil {
 		return nil, nil, err
 	}

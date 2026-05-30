@@ -1,5 +1,5 @@
 @host = http://localhost:5000
-@notification_id = 69a5a5f35-19d4-49a5-8081-a341c2138d98
+@notification_id = a0c4fe5e-15fa-4d24-ac52-99dc2e4ea797
 
 ###
 GET {{host}}/v1/api/notification/{{notification_id}}

@@ -9,7 +9,6 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/quangnguyen1505/go-notification-system/internal/notification/domain"
 	database "github.com/quangnguyen1505/go-notification-system/internal/notification/infras/postgresql/gen"
-	"github.com/quangnguyen1505/go-notification-system/pkg/logger"
 	"github.com/quangnguyen1505/go-notification-system/pkg/postgres"
 )
 
@@ -21,16 +20,14 @@ var RepositorySet = wire.NewSet(
 )
 
 type notificationRepo struct {
-	pg     postgres.DBEngine
-	q      *database.Queries
-	logger *logger.LoggerZap
+	pg postgres.DBEngine
+	q  *database.Queries
 }
 
-func NewNotificationRepo(pg postgres.DBEngine, logger *logger.LoggerZap) *notificationRepo {
+func NewNotificationRepo(pg postgres.DBEngine) *notificationRepo {
 	return &notificationRepo{
-		pg:     pg,
-		q:      database.New(pg.GetDB()),
-		logger: logger,
+		pg: pg,
+		q:  database.New(pg.GetDB()),
 	}
 }
 

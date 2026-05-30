@@ -11,14 +11,13 @@ import (
 	"syscall"
 
 	"github.com/quangnguyen1505/go-notification-system/cmd/notification/config"
+	"github.com/quangnguyen1505/go-notification-system/global/noti"
 	notificationapp "github.com/quangnguyen1505/go-notification-system/internal/notification/app"
 	"github.com/quangnguyen1505/go-notification-system/pkg/logger"
 	"go.uber.org/automaxprocs/maxprocs"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 )
-
-var Logger *logger.LoggerZap
 
 func main() {
 	// set GOMAXPROCS -> get default from cpu core -> ex: 4 cores -> GOMAXPROCS=8
@@ -30,15 +29,14 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	cfg, err := config.NewConfig()
+	noti.Config, err = config.NewConfig()
 	if err != nil {
 		log.Printf("failed get config: %v", err)
 		return
 	}
 
-	Logger = logger.NewLogger(cfg.Log)
-	Logger.Info("⚡ init app", zap.String("name", cfg.Name), zap.String("version", cfg.Version))
-
+	noti.Logger = logger.NewLogger(noti.Config.Log)
+	noti.Logger.Info("⚡ init app", zap.String("name", noti.Config.App.Name), zap.String("version", noti.Config.App.Version))
 	// set up logrus
 	// logrus.SetFormatter(&logrus.JSONFormatter{})
 	// logrus.SetOutput(os.Stdout)
@@ -46,20 +44,20 @@ func main() {
 
 	server := grpc.NewServer()
 
-	if _, cleanup, err := notificationapp.InitApp(cfg, Logger, server); err != nil {
-		Logger.Error("failed init app", zap.Error(err))
+	if _, cleanup, err := notificationapp.InitApp(server); err != nil {
+		noti.Logger.Error("failed init app", zap.Error(err))
 		return
 	} else if cleanup != nil {
 		defer cleanup()
 	}
 
 	// GRPC server
-	address := fmt.Sprintf("%s:%d", cfg.HTTP.Host, cfg.HTTP.Port)
+	address := fmt.Sprintf("%s:%d", noti.Config.HTTP.Host, noti.Config.HTTP.Port)
 	network := "tcp"
 
 	l, err := net.Listen(network, address)
 	if err != nil {
-		Logger.Error(
+		noti.Logger.Error(
 			"failed to listen to address",
 			zap.Error(err),
 			zap.String("network", network),
@@ -68,11 +66,11 @@ func main() {
 		return
 	}
 
-	Logger.Info("🌏 start server...", zap.String("address", address))
+	noti.Logger.Info("🌏 start server...", zap.String("address", address))
 
 	defer func() {
 		if err1 := l.Close(); err1 != nil {
-			Logger.Error(
+			noti.Logger.Error(
 				"failed to close listener",
 				zap.Error(err1),
 				zap.String("network", network),
@@ -91,15 +89,15 @@ func main() {
 
 	select {
 	case v := <-quit:
-		Logger.Info("signal.Notify", zap.String("signal", v.String()))
+		noti.Logger.Info("signal.Notify", zap.String("signal", v.String()))
 		cancel()
 	case err := <-serveErr:
 		if err != nil && !errors.Is(err, grpc.ErrServerStopped) {
-			Logger.Error("gRPC server exited", zap.Error(err))
+			noti.Logger.Error("gRPC server exited", zap.Error(err))
 		}
 		cancel()
 	case <-ctx.Done():
-		Logger.Info("ctx.Done", zap.Error(ctx.Err()))
+		noti.Logger.Info("ctx.Done", zap.Error(ctx.Err()))
 	}
 
 	server.GracefulStop()
