@@ -66,44 +66,88 @@ The codebase separates **entrypoints** (`cmd/`), **core domain** (`internal/`), 
 
 ```
 .
+├── build/
 ├── cmd/
-│   ├── proxy/                 # Reverse proxy (grpc-gateway) - REST → gRPC entrypoint
-│   │   ├── config/            # Proxy config loader
-│   │   ├── config.yml         # Example config
-│   │   └── main.go            # HTTP server + grpc-gateway mux
-│   ├── notification/          # Notification service entrypoint (skeleton)
-│   └── user/                  # User Preferences service entrypoint (skeleton)
-│
-├── internal/
-│   └── notification/          # Notification bounded context (skeleton)
-│       ├── app/               # App bootstrap / wiring
-│       ├── domain/            # Entities/VOs/domain services
-│       ├── usecases/          # Application use-cases
-│       └── infras/            # DB/queue/provider integrations
-│           ├── postgresql/     # PostgreSQL + sqlc generated queries
-│           │   ├── query/      # sqlc input queries (*.sql)
-│           │   └── gen/        # sqlc generated Go code
-│           └── repo/           # Repository implementations (inmem/postgres, ...)
-│
-├── pkg/
-│   ├── config/                # Shared config structs
-│   ├── logger/                # Logging adapters (logrus ↔ slog)
-│   ├── postgres/              # PostgreSQL helpers (direction)
-│   ├── rabbitmq/              # RabbitMQ helpers (direction)
-│   └── utils/                 # Shared utilities
-│
-├── proto/
-│   └── gen/                   # Proto and/or generated code location (placeholder)
-│
+│   ├── cli/
+│   │   └── makefile/
+│   │       └── notification/
+│   │           └── main.mk     # Helpers for notification DB migrations
+│   ├── notification/
+│   │   ├── config/
+│   │   │   └── config.go       # Notification service config loader
+│   │   ├── config.yml          # Local config example
+│   │   └── main.go             # gRPC entrypoint
+│   ├── printdsn/
+│   │   └── main.go
+│   ├── proxy/
+│   │   ├── config/
+│   │   │   └── config.go       # Proxy config loader
+│   │   ├── config.yml          # Local config example
+│   │   └── main.go             # HTTP reverse proxy + grpc-gateway
+│   └── user/
 ├── db/
-│   └── migrations/            # Goose migrations (PostgreSQL)
-├── docker/                    # Dockerfiles
-├── docs/                      # Documents & diagrams
-├── rests/                     # HTTP client files for dev
-├── third_party/               # OpenAPI and external assets
-├── tools/                     # Tooling (protoc generators, sqlc, ...)
+│   └── migrations/             # PostgreSQL migrations
+├── docker/
+│   └── Dockerfile-proxy
+├── docs/
+│   └── cli/
+│       └── cli-gen.md
+├── global/
+│   └── noti/
+│       └── global.go           # Process-wide config/logger bootstrap state
+├── internal/
+│   └── notification/
+│       ├── app/
+│       │   ├── app.go          # Composition root state
+│       │   ├── wire.go         # Wire injector definition
+│       │   ├── wire_gen.go     # Generated Wire injector
+│       │   └── router/
+│       │       └── notification_grpc_server.go
+│       ├── domain/
+│       │   ├── interfaces.go   # Domain ports
+│       │   └── models.go       # Domain model(s)
+│       ├── infras/
+│       │   ├── postgresql/
+│       │   │   ├── gen/        # sqlc generated code
+│       │   │   └── query/      # sqlc query files
+│       │   └── repo/
+│       │       └── notification_postgres.go
+│       └── usecases/
+│           └── notification/
+│               ├── interfaces.go
+│               └── service.go
+├── pkg/
+│   ├── config/
+│   ├── logger/
+│   ├── postgres/
+│   ├── rabbitmq/
+│   └── utils/
+├── proto/
+│   ├── buf.yaml
+│   ├── common.proto
+│   ├── notification.proto
+│   └── gen/
+├── rests/
+│   └── client.http
+├── scripts/
+├── storages/
+│   └── logger/
+│       ├── notification/
+│       └── proxy/
+├── third_party/
+│   └── OpenAPI/
+│       ├── common.swagger.json
+│       └── notification.swagger.json
+├── tools/
+│   └── tools.go
+├── buf.gen.yaml
+├── buf.work.yaml
+├── docker-compose-core.yml
 ├── go.mod
-└── go.sum
+├── Makefile
+├── README.md
+├── README.vi.md
+└── sqlc.yaml
 ```
 
 ## DDD / bounded-context layout

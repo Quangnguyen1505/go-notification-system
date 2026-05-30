@@ -66,44 +66,88 @@ Repo được tổ chức theo hướng tách **entrypoints** (`cmd/`), **core d
 
 ```
 .
+├── build/
 ├── cmd/
-│   ├── proxy/                 # Reverse proxy (grpc-gateway) - entrypoint REST → gRPC
-│   │   ├── config/            # Load config cho proxy
-│   │   ├── config.yml         # Ví dụ cấu hình (hiện dùng cho tham khảo)
-│   │   └── main.go            # HTTP server + grpc-gateway mux
-│   ├── notification/          # Entry cho Notification service (skeleton)
-│   └── user/                  # Entry cho User Preferences service (skeleton)
-│
-├── internal/
-│   └── notification/          # Notification bounded context (skeleton)
-│       ├── app/               # Wire-up/app bootstrap
-│       ├── domain/            # Entities/VOs/Domain services
-│       ├── usecases/          # Application use-cases
-│       └── infras/            # DB/queue/provider integrations
-│           ├── postgresql/     # PostgreSQL + sqlc generated queries
-│           │   ├── query/      # file SQL đầu vào cho sqlc
-│           │   └── gen/        # code Go sinh ra bởi sqlc
-│           └── repo/           # Repository implementations (inmem/postgres, ...)
-│
-├── pkg/
-│   ├── config/                # Struct config dùng chung
-│   ├── logger/                # Logging adapters (logrus ↔ slog)
-│   ├── postgres/              # PostgreSQL helpers (định hướng)
-│   ├── rabbitmq/              # RabbitMQ helpers (định hướng)
-│   └── utils/                 # Tiện ích dùng chung
-│
-├── proto/
-│   └── gen/                   # Nơi đặt proto / (và/hoặc) code sinh ra (đang là placeholder)
-│
+│   ├── cli/
+│   │   └── makefile/
+│   │       └── notification/
+│   │           └── main.mk     # Hỗ trợ migration DB cho notification
+│   ├── notification/
+│   │   ├── config/
+│   │   │   └── config.go       # Loader config cho service notification
+│   │   ├── config.yml          # File config mẫu
+│   │   └── main.go             # Entry gRPC
+│   ├── printdsn/
+│   │   └── main.go
+│   ├── proxy/
+│   │   ├── config/
+│   │   │   └── config.go       # Loader config cho proxy
+│   │   ├── config.yml          # File config mẫu
+│   │   └── main.go             # HTTP reverse proxy + grpc-gateway
+│   └── user/
 ├── db/
-│   └── migrations/            # Goose migrations (PostgreSQL)
-├── docker/                    # Dockerfiles
-├── docs/                      # Tài liệu & sơ đồ (architecture diagram)
-├── rests/                     # HTTP client files (Postman-like) cho dev
-├── third_party/               # OpenAPI và tài nguyên phụ trợ
-├── tools/                     # Tooling (protoc generators, sqlc, ...)
+│   └── migrations/             # Migrations cho PostgreSQL
+├── docker/
+│   └── Dockerfile-proxy
+├── docs/
+│   └── cli/
+│       └── cli-gen.md
+├── global/
+│   └── noti/
+│       └── global.go           # State bootstrap dùng chung cho process
+├── internal/
+│   └── notification/
+│       ├── app/
+│       │   ├── app.go          # Composition root state
+│       │   ├── wire.go         # Khai báo Wire injector
+│       │   ├── wire_gen.go     # Wire generated code
+│       │   └── router/
+│       │       └── notification_grpc_server.go
+│       ├── domain/
+│       │   ├── interfaces.go   # Domain ports
+│       │   └── models.go       # Domain model(s)
+│       ├── infras/
+│       │   ├── postgresql/
+│       │   │   ├── gen/        # sqlc generated code
+│       │   │   └── query/      # file SQL đầu vào cho sqlc
+│       │   └── repo/
+│       │       └── notification_postgres.go
+│       └── usecases/
+│           └── notification/
+│               ├── interfaces.go
+│               └── service.go
+├── pkg/
+│   ├── config/
+│   ├── logger/
+│   ├── postgres/
+│   ├── rabbitmq/
+│   └── utils/
+├── proto/
+│   ├── buf.yaml
+│   ├── common.proto
+│   ├── notification.proto
+│   └── gen/
+├── rests/
+│   └── client.http
+├── scripts/
+├── storages/
+│   └── logger/
+│       ├── notification/
+│       └── proxy/
+├── third_party/
+│   └── OpenAPI/
+│       ├── common.swagger.json
+│       └── notification.swagger.json
+├── tools/
+│   └── tools.go
+├── buf.gen.yaml
+├── buf.work.yaml
+├── docker-compose-core.yml
 ├── go.mod
-└── go.sum
+├── Makefile
+├── README.md
+├── README.vi.md
+└── sqlc.yaml
 ```
 
 ## Tổ chức theo DDD / bounded-context

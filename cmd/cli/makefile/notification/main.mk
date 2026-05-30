@@ -11,7 +11,7 @@ export
 GOOSE ?= goose
 YQ ?= yq
 
-CONFIG_NOTIFICATION ?= cmd/notification/config.yml
+CONFIG_NOTIFICATION ?= cmd/notification/config/config.yml
 
 GOOSE_DRIVER ?= postgres
 GOOSE_MIGRATION_DIR ?= db/migrations
@@ -35,7 +35,7 @@ up_by_one:
 	set "GOOSE_DRIVER=${GOOSE_DRIVER}" && set "GOOSE_DBSTRING=${GOOSE_DBSTRING}" && ${GOOSE} -dir ${GOOSE_MIGRATION_DIR} up-by-one
 
 create_migration:
-	@${GOOSE} -dir=${GOOSE_MIGRATION_DIR} create ${name} sql
+	@${GOOSE} -dir=${GOOSE_MIGRATION_DIR} create -s ${name} sql
 
 upGoose:
 	set "GOOSE_DRIVER=${GOOSE_DRIVER}" && set "GOOSE_DBSTRING=${GOOSE_DBSTRING}" && ${GOOSE} -dir ${GOOSE_MIGRATION_DIR} up

@@ -32,7 +32,7 @@ func NewConfig() (*Config, error) {
 
 	configCandidates := []string{
 		filepath.Join(dir, "config.yml"),
-		filepath.Join(dir, "cmd", "notification", "config.yml"),
+		filepath.Join(dir, "cmd", "notification", "config", "config.yml"),
 	}
 
 	var configPath string
