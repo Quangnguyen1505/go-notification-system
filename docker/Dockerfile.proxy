@@ -18,6 +18,6 @@ FROM scratch
 EXPOSE 5000
 
 # GOPATH for scratch images is /
-COPY --from=builder /app/cmd/proxy/config.yml /
+COPY --from=builder /app/cmd/proxy/config/config.yml /
 COPY --from=builder /bin/app /app
 CMD ["/app"]

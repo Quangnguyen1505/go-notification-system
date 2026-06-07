@@ -36,3 +36,6 @@ go.work
 
 # logger
 **/storages/logger/**
+
+# Claude 
+CLAUDE.md
